@@ -50,15 +50,19 @@ figma.ui.onmessage = async (msg: GenerateColorMessage | undefined) => {
 
       // create rect
       const rect = figma.createRectangle();
-      rect.x = (i % 12) * 100;
-      rect.y = Math.floor(i / 12) * 52;
+      rect.x = figma.viewport.center.x + (i % 12) * 100;
+      rect.y = figma.viewport.center.y + Math.floor(i / 12) * 52;
       rect.resize(96, 48);
+      rect.name = `${prefix}${number}`;
       await rect.setFillStyleIdAsync(style.id);
 
       nodes.push(rect);
     }
 
-    figma.currentPage.selection = nodes;
+    // group rects and select
+    const group = figma.group(nodes, figma.currentPage);
+    group.name = msg.folderName;
+    figma.currentPage.selection = [group];
   }
 
   // Make sure to close the plugin when you're done. Otherwise the plugin will
