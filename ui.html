@@ -1,0 +1,117 @@
+<div class="container">
+  <div class="inputField">
+    <label for="cssCode">Paste the CSS code below:</label>
+    <textarea
+      id="cssCode"
+      rows="10"
+      placeholder=":root, .light, .light-theme ..."
+    ></textarea>
+  </div>
+
+  <div class="inputField">
+    <label for="folderName">Folder name:</label>
+    <input id="folderName" placeholder="light/..." />
+  </div>
+
+  <div class="buttonContainer">
+    <button id="generate">Generate Local Variables</button>
+  </div>
+</div>
+
+<script>
+  document.getElementById("generate").onclick = () => {
+    // get css code
+    const cssCodeTextArea = document.getElementById("cssCode");
+    const colorMatches = cssCodeTextArea.value.matchAll(/(#[a-z0-9]{6,8})/g);
+    const colors = Array.from(colorMatches).map((match) => match[0]);
+    cssCodeTextArea.value = "";
+
+    if (colors.length !== 27) return;
+
+    // get folder name
+    const folderTextInput = document.getElementById("folderName");
+    let folderName = folderTextInput.value;
+    if (folderName.slice(-1) === "/") folderName = folderName.slice(0, -1);
+    folderTextInput.value = "";
+
+    parent.postMessage(
+      { pluginMessage: { type: "generate-colors", colors, folderName } },
+      "*"
+    );
+  };
+</script>
+
+<style>
+  body {
+    background: #f9f9f9;
+  }
+
+  *,
+  *::after,
+  *::before,
+  *::placeholder {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+      Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue",
+      sans-serif;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  label {
+    font-weight: 600;
+  }
+
+  textarea {
+    background: #191919;
+    color: white;
+    border-radius: 4px;
+    resize: none;
+    padding: 10px;
+    overflow-y: auto;
+  }
+
+  textarea::placeholder {
+    color: #949494;
+  }
+
+  input {
+    border-radius: 4px;
+    border: 1px solid black;
+    padding: 4px;
+  }
+
+  button {
+    border-radius: 8px;
+    padding: 8px 12px;
+    border: none;
+    background: #122146;
+    color: white;
+    cursor: pointer;
+  }
+
+  button:hover {
+    background: #0e1935;
+  }
+
+  button:active {
+    background: #0a1227;
+  }
+
+  .container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px;
+  }
+
+  .inputField {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .buttonContainer {
+    display: flex;
+    justify-content: flex-end;
+  }
+</style>
