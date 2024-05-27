@@ -7,12 +7,13 @@
 // full browser environment (See https://www.figma.com/plugin-docs/how-plugins-run).
 
 // This shows the HTML page in "ui.html".
-figma.showUI(__html__, { height: 400, width: 360 });
+figma.showUI(__html__, { height: 400, width: 400 });
 
 interface GenerateColorMessage {
   type: "generate-colors";
   colors: string[];
   folderName: string;
+  makeRectangles: boolean;
 }
 
 // input: #001122 or #00112233
@@ -49,20 +50,24 @@ figma.ui.onmessage = async (msg: GenerateColorMessage | undefined) => {
       style.paints = [{ type: "SOLID", ...hexToRGBA(msg.colors[i]) }];
 
       // create rect
-      const rect = figma.createRectangle();
-      rect.x = figma.viewport.center.x + (i % 12) * 100;
-      rect.y = figma.viewport.center.y + Math.floor(i / 12) * 52;
-      rect.resize(96, 48);
-      rect.name = `${prefix}${number}`;
-      await rect.setFillStyleIdAsync(style.id);
+      if (msg.makeRectangles) {
+        const rect = figma.createRectangle();
+        rect.x = figma.viewport.center.x + (i % 12) * 100;
+        rect.y = figma.viewport.center.y + Math.floor(i / 12) * 52;
+        rect.resize(96, 48);
+        rect.name = `${prefix}${number}`;
+        await rect.setFillStyleIdAsync(style.id);
 
-      nodes.push(rect);
+        nodes.push(rect);
+      }
     }
 
     // group rects and select
-    const group = figma.group(nodes, figma.currentPage);
-    group.name = msg.folderName;
-    figma.currentPage.selection = [group];
+    if (msg.makeRectangles) {
+      const group = figma.group(nodes, figma.currentPage);
+      group.name = msg.folderName;
+      figma.currentPage.selection = [group];
+    }
   }
 
   // Make sure to close the plugin when you're done. Otherwise the plugin will

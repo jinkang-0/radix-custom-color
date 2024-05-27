@@ -13,9 +13,13 @@
     <input id="folderName" placeholder="light/..." />
   </div>
 
-  <div class="buttonContainer">
+  <footer>
+    <div class="checkboxContainer">
+      <input type="checkbox" id="makeRectangles" checked />
+      <label class="small" for="makeRectangles">Create rectangles</label>
+    </div>
     <button id="generate">Generate Local Variables</button>
-  </div>
+  </footer>
 </div>
 
 <script>
@@ -34,8 +38,19 @@
     if (folderName.slice(-1) === "/") folderName = folderName.slice(0, -1);
     folderTextInput.value = "";
 
+    // get whether to create rectangles
+    const rectangleCheckbox = document.getElementById("makeRectangles");
+    const makeRectangles = rectangleCheckbox.checked;
+
     parent.postMessage(
-      { pluginMessage: { type: "generate-colors", colors, folderName } },
+      {
+        pluginMessage: {
+          type: "generate-colors",
+          colors,
+          folderName,
+          makeRectangles
+        }
+      },
       "*"
     );
   };
@@ -60,6 +75,10 @@
 
   label {
     font-weight: 600;
+  }
+
+  label.small {
+    font-size: 0.9375rem;
   }
 
   textarea {
@@ -110,8 +129,23 @@
     flex-direction: column;
   }
 
-  .buttonContainer {
+  footer {
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .checkboxContainer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+    gap: 4px;
+  }
+
+  input[type="checkbox"] {
+    vertical-align: bottom;
+    height: 15px;
+    width: 15px;
   }
 </style>
