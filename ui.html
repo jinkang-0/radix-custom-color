@@ -6,6 +6,7 @@
       rows="10"
       placeholder=":root, .light, .light-theme ..."
     ></textarea>
+    <p class="error" id="error"></p>
   </div>
 
   <div class="inputField">
@@ -23,6 +24,8 @@
 </div>
 
 <script>
+  const errorText = document.getElementById("error");
+
   document.getElementById("generate").onclick = () => {
     // get css code
     const cssCodeTextArea = document.getElementById("cssCode");
@@ -30,7 +33,11 @@
     const colors = Array.from(colorMatches).map((match) => match[0]);
     cssCodeTextArea.value = "";
 
-    if (colors.length < 27) return;
+    if (colors.length < 24) {
+      errorText.innerHTML =
+        "Please make sure there's at least 24 colors in the CSS code.";
+      return;
+    }
 
     // get folder name
     const folderTextInput = document.getElementById("folderName");
@@ -147,5 +154,9 @@
     vertical-align: bottom;
     height: 15px;
     width: 15px;
+  }
+
+  .error {
+    color: #801c1c;
   }
 </style>
