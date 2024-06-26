@@ -1,11 +1,3 @@
-// This plugin will open a window to prompt the user to enter a number, and
-// it will then create that many rectangles on the screen.
-
-// This file holds the main code for plugins. Code in this file has access to
-// the *figma document* via the figma global object.
-// You can access browser APIs in the <script> tag inside "ui.html" which has a
-// full browser environment (See https://www.figma.com/plugin-docs/how-plugins-run).
-
 // This shows the HTML page in "ui.html".
 figma.showUI(__html__, { height: 400, width: 400 });
 
@@ -25,9 +17,18 @@ const hexToRGBA = (hexCode: string) => {
     opacity = parseInt(hex.substring(6, 8), 16) / 255;
   }
 
-  const r = parseInt(hex.substring(0, 2), 16) / 255;
-  const g = parseInt(hex.substring(2, 4), 16) / 255;
-  const b = parseInt(hex.substring(4, 6), 16) / 255;
+  const rText =
+    hex.length === 3 ? hex.substring(0, 1).repeat(2) : hex.substring(0, 2);
+
+  const gText =
+    hex.length === 3 ? hex.substring(1, 2).repeat(2) : hex.substring(2, 4);
+
+  const bText =
+    hex.length === 3 ? hex.substring(2, 3).repeat(2) : hex.substring(4, 6);
+
+  const r = parseInt(rText, 16) / 255;
+  const g = parseInt(gText, 16) / 255;
+  const b = parseInt(bText, 16) / 255;
 
   return { color: { r, g, b }, opacity };
 };
