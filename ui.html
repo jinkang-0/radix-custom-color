@@ -1,5 +1,5 @@
 <div class="container">
-  <div class="inputField">
+  <div class="inputFieldLarge">
     <label for="cssCode">Paste the CSS code below:</label>
     <textarea
       id="cssCode"
@@ -10,25 +10,39 @@
   </div>
 
   <div class="inputField">
-    <label for="folderName">Folder name:</label>
-    <input id="folderName" placeholder="light/..." />
+    <label for="folderName">Group Name:</label>
+    <input id="folderName" placeholder="red/..." />
   </div>
 
-  <footer>
-    <div class="checkboxContainer">
-      <input type="checkbox" id="makeRectangles" checked />
-      <label class="small" for="makeRectangles">Create rectangles</label>
-    </div>
-    <button id="generate">Generate Local Variables</button>
-  </footer>
+  <div class="checkboxContainer">
+    <input type="checkbox" id="makeRectangles" checked />
+    <label class="small" for="makeRectangles">Create Rectangles</label>
+  </div>
+
+  <button id="generateStyle">Generate Styles</button>
+
+  <div class="inputField">
+    <label for="collectionName">Collection Name:</label>
+    <input id="collectionName" placeholder="Collection 1" />
+  </div>
+
+  <div class="inputField">
+    <label for="variableMode">Variable Mode:</label>
+    <input id="variableMode" placeholder="Value" />
+  </div>
+
+  <button id="generateVariable">Generate Variables</button>
 </div>
 
 <script>
   const errorText = document.getElementById("error");
+  const cssCodeTextArea = document.getElementById("cssCode");
+  const folderTextInput = document.getElementById("folderName");
+  const rectangleCheckbox = document.getElementById("makeRectangles");
+  const collectionNameInput = document.getElementById("collectionName");
+  const variableModeInput = document.getElementById("variableMode");
 
-  document.getElementById("generate").onclick = () => {
-    // get css code
-    const cssCodeTextArea = document.getElementById("cssCode");
+  const getColors = () => {
     const colorMatches = cssCodeTextArea.value.matchAll(/(#[a-z0-9]{3,8})/g);
     const colors = Array.from(colorMatches).map((match) => match[0]);
     cssCodeTextArea.value = "";
@@ -39,20 +53,33 @@
       return;
     }
 
-    // get folder name
-    const folderTextInput = document.getElementById("folderName");
-    let folderName = folderTextInput.value;
-    if (folderName.slice(-1) === "/") folderName = folderName.slice(0, -1);
-    folderTextInput.value = "";
+    errorText.innerHTML = "";
 
-    // get whether to create rectangles
-    const rectangleCheckbox = document.getElementById("makeRectangles");
+    return colors;
+  };
+
+  const getInputValue = (input) => {
+    let val = input.value;
+    if (val.slice(-1) === "/") val = val.slice(0, -1);
+    input.value = "";
+    return val;
+  };
+
+  const getFolderName = () => getInputValue(folderTextInput);
+  const getCollectionName = () => getInputValue(collectionNameInput);
+  const getVariableMode = () => getInputValue(variableModeInput);
+
+  document.getElementById("generateStyle").onclick = () => {
+    const colors = getColors();
+    if (!colors) return;
+
+    const folderName = getFolderName();
     const makeRectangles = rectangleCheckbox.checked;
 
     parent.postMessage(
       {
         pluginMessage: {
-          type: "generate-colors",
+          type: "generate-colors-style",
           colors,
           folderName,
           makeRectangles
@@ -61,6 +88,38 @@
       "*"
     );
   };
+
+  document.getElementById("generateVariable").onclick = () => {
+    const colors = getColors();
+    if (!colors) return;
+
+    const folderName = getFolderName();
+    const collectionName = getCollectionName();
+    const variableMode = getVariableMode();
+    const makeRectangles = rectangleCheckbox.checked;
+
+    parent.postMessage(
+      {
+        pluginMessage: {
+          type: "generate-colors-variable",
+          colors,
+          folderName,
+          makeRectangles,
+          collectionName,
+          variableMode
+        }
+      },
+      "*"
+    );
+  };
+
+  parent.addEventListener("onmessage", (msg) => {
+    if (!msg) return;
+
+    if (msg.type === "server-error") {
+      errorText.innerHTML = msg.message;
+    }
+  });
 </script>
 
 <style>
@@ -131,23 +190,33 @@
     padding: 20px;
   }
 
-  .inputField {
+  .inputFieldLarge {
     display: flex;
     flex-direction: column;
   }
 
-  footer {
+  .inputField {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+  }
+
+  footer {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
   }
 
   .checkboxContainer {
     display: flex;
     align-items: center;
-    justify-content: center;
     user-select: none;
     gap: 4px;
+  }
+
+  .buttonContainer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
   }
 
   input[type="checkbox"] {
