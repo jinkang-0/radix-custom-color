@@ -119,8 +119,11 @@ figma.ui.onmessage = async (msg: GenerateColorMessage | undefined) => {
         await figma.variables.getLocalVariableCollectionsAsync();
       varCollection = collections.find((c) => c.name === collectionName);
       if (!varCollection) {
-        varCollection =
-          figma.variables.createVariableCollection(collectionName);
+        if (!msg.collectionName && collections.length > 0)
+          varCollection = collections[0];
+        else
+          varCollection =
+            figma.variables.createVariableCollection(collectionName);
       }
     } catch {
       varCollection = figma.variables.createVariableCollection(collectionName);
