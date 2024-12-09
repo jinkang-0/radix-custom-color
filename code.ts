@@ -1,5 +1,5 @@
 // This shows the HTML page in "ui.html".
-figma.showUI(__html__, { height: 800, width: 400 });
+figma.showUI(__html__, { height: 550, width: 400 });
 
 interface GenerateColorStyleMessage {
   type: "generate-colors-style";
