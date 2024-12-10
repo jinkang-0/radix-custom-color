@@ -11,7 +11,7 @@
 
   <div class="inputField">
     <label for="folderName">Group Name:</label>
-    <input id="folderName" placeholder="red/..." />
+    <input id="folderName" placeholder="red" />
   </div>
 
   <div class="checkboxContainer">
@@ -113,13 +113,15 @@
     );
   };
 
-  parent.addEventListener("onmessage", (msg) => {
-    if (!msg) return;
+  onmessage = (ev) => {
+    if (!ev || !ev.data || !ev.data.pluginMessage) return;
+
+    const msg = ev.data.pluginMessage;
 
     if (msg.type === "server-error") {
       errorText.innerHTML = msg.message;
     }
-  });
+  };
 </script>
 
 <style>

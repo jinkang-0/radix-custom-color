@@ -113,28 +113,57 @@ figma.ui.onmessage = async (msg: GenerateColorMessage | undefined) => {
     // determine collection
     const collectionName = msg.collectionName || "Collection 1";
     let varCollection: VariableCollection | undefined;
+    let newCollection = false;
+    let emptyCollection = false;
 
     try {
       const collections =
         await figma.variables.getLocalVariableCollectionsAsync();
       varCollection = collections.find((c) => c.name === collectionName);
       if (!varCollection) {
-        if (!msg.collectionName && collections.length > 0)
+        if (!msg.collectionName && collections.length > 0) {
           varCollection = collections[0];
-        else
+        } else {
           varCollection =
             figma.variables.createVariableCollection(collectionName);
+          newCollection = true;
+        }
       }
     } catch {
       varCollection = figma.variables.createVariableCollection(collectionName);
+      newCollection = true;
+    }
+
+    if (varCollection.variableIds.length === 0) {
+      emptyCollection = true;
     }
 
     // determine mode
     let varMode = "";
-    if (!msg.variableMode) {
+
+    if (
+      !msg.variableMode ||
+      (varCollection.modes.length === 1 &&
+        varCollection.modes[0].name === "Mode 1" &&
+        msg.variableMode === "Value")
+    ) {
+      // default mode
+      // no mode specified or specifying "Value" (and the internal mode name is "Mode 1")
       varMode = varCollection.modes[0].modeId;
+    } else if (newCollection || emptyCollection) {
+      // rename default mode
+      varMode = varCollection.modes[0].modeId;
+      varCollection.renameMode(varMode, msg.variableMode);
     } else {
-      const foundMode = varCollection.modes.find((v) => v.name === varMode);
+      // create new mode
+      console.log(varCollection.modes);
+
+      const foundMode = varCollection.modes.find(
+        (v) => v.name === msg.variableMode
+      );
+
+      console.log(`foundMode: ${foundMode}`);
+
       if (foundMode) {
         varMode = foundMode.modeId;
       } else {
@@ -142,7 +171,7 @@ figma.ui.onmessage = async (msg: GenerateColorMessage | undefined) => {
         try {
           varMode = varCollection.addMode(varMode);
         } catch {
-          const errorMessage = `Failed to add mode to ${collectionName}.`;
+          const errorMessage = `Failed to add mode to ${varCollection.name}.`;
           console.error(errorMessage);
           figma.ui.postMessage({
             type: "server-error",
@@ -165,8 +194,7 @@ figma.ui.onmessage = async (msg: GenerateColorMessage | undefined) => {
           "COLOR"
         );
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : String(error);
+        const errorMessage = `Cannot create variable ${colorName} in ${varCollection.name}.`;
         console.error(errorMessage);
         figma.ui.postMessage({
           type: "server-error",
