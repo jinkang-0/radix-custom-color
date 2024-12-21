@@ -161,6 +161,10 @@ figma.ui.onmessage = async (msg: GenerateColorMessage | undefined) => {
       // default mode
       // no mode specified or specifying "Value" (and the internal mode name is "Mode 1")
       varMode = varCollection.modes[0].modeId;
+    } else if (newCollection || emptyCollection) {
+      // rename default mode
+      varMode = varCollection.modes[0].modeId;
+      varCollection.renameMode(varMode, msg.variableMode);
     } else {
       // find existing mode
       const foundMode = varCollection.modes.find(
