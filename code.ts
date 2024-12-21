@@ -117,21 +117,32 @@ figma.ui.onmessage = async (msg: GenerateColorMessage | undefined) => {
     let emptyCollection = false;
 
     try {
+      // find collection
       const collections =
         await figma.variables.getLocalVariableCollectionsAsync();
       varCollection = collections.find((c) => c.name === collectionName);
+
+      // collection doesn't exist
       if (!varCollection) {
         if (!msg.collectionName && collections.length > 0) {
+          // if collection name not specified, assume first collection (if it exists)
           varCollection = collections[0];
         } else {
+          // otherwise, create a new collection
           varCollection =
             figma.variables.createVariableCollection(collectionName);
           newCollection = true;
         }
       }
-    } catch {
-      varCollection = figma.variables.createVariableCollection(collectionName);
-      newCollection = true;
+    } catch (err) {
+      const errorMessage = `Failed to find or create collection ${collectionName}.`;
+      console.error(errorMessage);
+      console.error(err);
+      figma.ui.postMessage({
+        type: "server-error",
+        message: errorMessage
+      });
+      return;
     }
 
     if (varCollection.variableIds.length === 0) {
@@ -150,29 +161,25 @@ figma.ui.onmessage = async (msg: GenerateColorMessage | undefined) => {
       // default mode
       // no mode specified or specifying "Value" (and the internal mode name is "Mode 1")
       varMode = varCollection.modes[0].modeId;
-    } else if (newCollection || emptyCollection) {
-      // rename default mode
-      varMode = varCollection.modes[0].modeId;
-      varCollection.renameMode(varMode, msg.variableMode);
     } else {
-      // create new mode
-      console.log(varCollection.modes);
-
+      // find existing mode
       const foundMode = varCollection.modes.find(
         (v) => v.name === msg.variableMode
       );
 
-      console.log(`foundMode: ${foundMode}`);
-
       if (foundMode) {
+        // mode exists
         varMode = foundMode.modeId;
       } else {
+        // mode doesn't exist
         // attempt to add mode, fail gracefully and notify client
         try {
-          varMode = varCollection.addMode(varMode);
-        } catch {
+          console.error("Couldn't find mode, attempting to add new mode...");
+          varMode = varCollection.addMode(msg.variableMode);
+        } catch (err) {
           const errorMessage = `Failed to add mode to ${varCollection.name}.`;
           console.error(errorMessage);
+          console.error(err);
           figma.ui.postMessage({
             type: "server-error",
             message: errorMessage
@@ -182,25 +189,34 @@ figma.ui.onmessage = async (msg: GenerateColorMessage | undefined) => {
       }
     }
 
+    const allColorVars = await figma.variables.getLocalVariablesAsync("COLOR");
+
     for (let i = 0; i < 24; i++) {
       // create color variable
       const colorName = getColorPath(msg.folderName, i);
 
-      let variable: Variable | undefined;
-      try {
-        variable = figma.variables.createVariable(
-          colorName,
-          varCollection,
-          "COLOR"
-        );
-      } catch (error) {
-        const errorMessage = `Cannot create variable ${colorName} in ${varCollection.name}.`;
-        console.error(errorMessage);
-        figma.ui.postMessage({
-          type: "server-error",
-          message: errorMessage
-        });
-        return;
+      let variable = allColorVars.find(
+        (v) =>
+          v.variableCollectionId === varCollection.id && v.name === colorName
+      );
+
+      if (!variable) {
+        try {
+          variable = figma.variables.createVariable(
+            colorName,
+            varCollection,
+            "COLOR"
+          );
+        } catch (error) {
+          const errorMessage = `Cannot create variable ${colorName} in ${varCollection.name}.`;
+          console.error(errorMessage);
+          console.error(error);
+          figma.ui.postMessage({
+            type: "server-error",
+            message: errorMessage
+          });
+          return;
+        }
       }
 
       variable.setValueForMode(varMode, paintToRGBA(hexToPaint(msg.colors[i])));
@@ -236,5 +252,5 @@ figma.ui.onmessage = async (msg: GenerateColorMessage | undefined) => {
 
   // Make sure to close the plugin when you're done. Otherwise the plugin will
   // keep running, which shows the cancel button at the bottom of the screen.
-  figma.closePlugin();
+  // figma.closePlugin();
 };

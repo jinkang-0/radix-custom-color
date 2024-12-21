@@ -9,29 +9,33 @@
     <p class="error" id="error"></p>
   </div>
 
-  <div class="inputField">
-    <label for="folderName">Group Name:</label>
-    <input id="folderName" placeholder="red" />
-  </div>
+  <form id="styleForm">
+    <div class="inputField">
+      <label for="folderName">Group Name:</label>
+      <input id="folderName" placeholder="red" />
+    </div>
 
-  <div class="checkboxContainer">
-    <input type="checkbox" id="makeRectangles" checked />
-    <label class="small" for="makeRectangles">Create Rectangles</label>
-  </div>
+    <div class="checkboxContainer">
+      <input type="checkbox" id="makeRectangles" checked />
+      <label class="small" for="makeRectangles">Create Rectangles</label>
+    </div>
 
-  <button id="generateStyle">Generate Styles</button>
+    <button type="submit" id="generateStyle">Generate Styles</button>
+  </form>
 
-  <div class="inputField">
-    <label for="collectionName">Collection Name:</label>
-    <input id="collectionName" placeholder="Collection 1" />
-  </div>
+  <form id="variableForm">
+    <div class="inputField">
+      <label for="collectionName">Collection Name:</label>
+      <input id="collectionName" placeholder="Collection 1" />
+    </div>
 
-  <div class="inputField">
-    <label for="variableMode">Variable Mode:</label>
-    <input id="variableMode" placeholder="Value" />
-  </div>
+    <div class="inputField">
+      <label for="variableMode">Variable Mode:</label>
+      <input id="variableMode" placeholder="Value" />
+    </div>
 
-  <button id="generateVariable">Generate Variables</button>
+    <button type="submit" id="generateVariable">Generate Variables</button>
+  </form>
 </div>
 
 <script>
@@ -69,7 +73,7 @@
   const getCollectionName = () => getInputValue(collectionNameInput);
   const getVariableMode = () => getInputValue(variableModeInput);
 
-  document.getElementById("generateStyle").onclick = () => {
+  const generateStyles = () => {
     const colors = getColors();
     if (!colors) return;
 
@@ -89,7 +93,12 @@
     );
   };
 
-  document.getElementById("generateVariable").onclick = () => {
+  document.getElementById("styleForm").onsubmit = (e) => {
+    e.preventDefault();
+    generateStyles();
+  };
+
+  const generateVariables = () => {
     const colors = getColors();
     if (!colors) return;
 
@@ -111,6 +120,11 @@
       },
       "*"
     );
+  };
+
+  document.getElementById("variableForm").onsubmit = (e) => {
+    e.preventDefault();
+    generateVariables();
   };
 
   onmessage = (ev) => {
@@ -190,6 +204,12 @@
     flex-direction: column;
     gap: 20px;
     padding: 20px;
+  }
+
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
   }
 
   .inputFieldLarge {
