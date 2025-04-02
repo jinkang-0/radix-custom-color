@@ -9,15 +9,22 @@
     <p class="error" id="error"></p>
   </div>
 
+  <div class="group">
+    <div class="checkboxContainer">
+      <input type="checkbox" id="makeRectangles" checked />
+      <label class="small" for="makeRectangles">Create Rectangles</label>
+    </div>
+
+    <div class="checkboxContainer">
+      <input type="checkbox" id="generateAlphas" checked />
+      <label class="small" for="generateAlphas">Generate Alphas</label>
+    </div>
+  </div>
+
   <form id="styleForm">
     <div class="inputField">
       <label for="folderName">Group Name:</label>
       <input id="folderName" placeholder="red" />
-    </div>
-
-    <div class="checkboxContainer">
-      <input type="checkbox" id="makeRectangles" checked />
-      <label class="small" for="makeRectangles">Create Rectangles</label>
     </div>
 
     <button type="submit" id="generateStyle">Generate Styles</button>
@@ -39,13 +46,19 @@
 </div>
 
 <script>
+  // grab element handles
   const errorText = document.getElementById("error");
+  const rectangleCheckbox = document.getElementById("makeRectangles");
+  const alphaCheckbox = document.getElementById("generateAlphas");
   const cssCodeTextArea = document.getElementById("cssCode");
   const folderTextInput = document.getElementById("folderName");
-  const rectangleCheckbox = document.getElementById("makeRectangles");
   const collectionNameInput = document.getElementById("collectionName");
   const variableModeInput = document.getElementById("variableMode");
 
+  /**
+   * Parse colors from CSS input. Error if incorrect format.
+   * Returns a list of color matches.
+   */
   const getColors = () => {
     const colorMatches = cssCodeTextArea.value.matchAll(/(#[a-z0-9]{3,8})/g);
     const colors = Array.from(colorMatches).map((match) => match[0]);
@@ -62,6 +75,9 @@
     return colors;
   };
 
+  /**
+   * Given the handle for an input element, return its value.
+   */
   const getInputValue = (input) => {
     let val = input.value;
     if (val.slice(-1) === "/") val = val.slice(0, -1);
@@ -69,16 +85,21 @@
     return val;
   };
 
+  // helpers for each input
   const getFolderName = () => getInputValue(folderTextInput);
   const getCollectionName = () => getInputValue(collectionNameInput);
   const getVariableMode = () => getInputValue(variableModeInput);
 
+  /**
+   * Fetches and sends relevant info to backend to generate styles.
+   */
   const generateStyles = () => {
     const colors = getColors();
     if (!colors) return;
 
     const folderName = getFolderName();
     const makeRectangles = rectangleCheckbox.checked;
+    const generateAlphas = alphaCheckbox.checked;
 
     parent.postMessage(
       {
@@ -86,18 +107,23 @@
           type: "generate-colors-style",
           colors,
           folderName,
-          makeRectangles
+          makeRectangles,
+          generateAlphas
         }
       },
       "*"
     );
   };
 
+  // bind style form submission to generate styles
   document.getElementById("styleForm").onsubmit = (e) => {
     e.preventDefault();
     generateStyles();
   };
 
+  /**
+   * Fetches and sends relevant info to backend to generate variables
+   */
   const generateVariables = () => {
     const colors = getColors();
     if (!colors) return;
@@ -106,6 +132,7 @@
     const collectionName = getCollectionName();
     const variableMode = getVariableMode();
     const makeRectangles = rectangleCheckbox.checked;
+    const generateAlphas = alphaCheckbox.checked;
 
     parent.postMessage(
       {
@@ -114,6 +141,7 @@
           colors,
           folderName,
           makeRectangles,
+          generateAlphas,
           collectionName,
           variableMode
         }
@@ -122,11 +150,13 @@
     );
   };
 
+  // binds variable form submission to generate variables
   document.getElementById("variableForm").onsubmit = (e) => {
     e.preventDefault();
     generateVariables();
   };
 
+  // receive error messages from backend
   onmessage = (ev) => {
     if (!ev || !ev.data || !ev.data.pluginMessage) return;
 
@@ -139,10 +169,7 @@
 </script>
 
 <style>
-  body {
-    background: #f9f9f9;
-  }
-
+  /* global styles */
   *,
   *::after,
   *::before,
@@ -155,6 +182,11 @@
     box-sizing: border-box;
   }
 
+  body {
+    background: #f9f9f9;
+  }
+
+  /* input styles */
   label {
     font-weight: 600;
   }
@@ -182,6 +214,12 @@
     padding: 4px;
   }
 
+  input[type="checkbox"] {
+    vertical-align: bottom;
+    height: 15px;
+    width: 15px;
+  }
+
   button {
     border-radius: 8px;
     padding: 8px 12px;
@@ -199,6 +237,7 @@
     background: #0a1227;
   }
 
+  /* layout styles */
   .container {
     display: flex;
     flex-direction: column;
@@ -228,6 +267,11 @@
     gap: 16px;
   }
 
+  .group {
+    display: flex;
+    gap: 16px;
+  }
+
   .checkboxContainer {
     display: flex;
     align-items: center;
@@ -239,12 +283,6 @@
     display: flex;
     justify-content: flex-end;
     gap: 8px;
-  }
-
-  input[type="checkbox"] {
-    vertical-align: bottom;
-    height: 15px;
-    width: 15px;
   }
 
   .error {

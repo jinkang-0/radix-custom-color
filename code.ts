@@ -6,6 +6,7 @@ interface GenerateColorStyleMessage {
   colors: string[];
   folderName: string;
   makeRectangles: boolean;
+  generateAlphas: boolean;
 }
 
 interface GenerateColorVariableMessage {
@@ -13,6 +14,7 @@ interface GenerateColorVariableMessage {
   colors: string[];
   folderName: string;
   makeRectangles: boolean;
+  generateAlphas: boolean;
   collectionName?: string;
   variableMode?: string;
 }
@@ -21,7 +23,7 @@ type GenerateColorMessage =
   | GenerateColorStyleMessage
   | GenerateColorVariableMessage;
 
-// input: #001122 or #00112233
+// example input: #001122 or #00112233
 const hexToPaint = (hexCode: string) => {
   const hex = hexCode.replace("#", "");
   let opacity = 1;
@@ -82,7 +84,9 @@ figma.ui.onmessage = async (msg: GenerateColorMessage | undefined) => {
   if (msg.type == "generate-colors-style") {
     const nodes: SceneNode[] = [];
 
-    for (let i = 0; i < 24; i++) {
+    const numStyles = msg.generateAlphas ? 24 : 12;
+
+    for (let i = 0; i < numStyles; i++) {
       // create color style
       const style = figma.createPaintStyle();
       style.name = getColorPath(msg.folderName, i);
@@ -109,6 +113,7 @@ figma.ui.onmessage = async (msg: GenerateColorMessage | undefined) => {
     }
   } else if (msg.type == "generate-colors-variable") {
     const nodes: SceneNode[] = [];
+    const numVars = msg.generateAlphas ? 24 : 12;
 
     // determine collection
     const collectionName = msg.collectionName || "Collection 1";
@@ -195,7 +200,7 @@ figma.ui.onmessage = async (msg: GenerateColorMessage | undefined) => {
 
     const allColorVars = await figma.variables.getLocalVariablesAsync("COLOR");
 
-    for (let i = 0; i < 24; i++) {
+    for (let i = 0; i < numVars; i++) {
       // create color variable
       const colorName = getColorPath(msg.folderName, i);
 
